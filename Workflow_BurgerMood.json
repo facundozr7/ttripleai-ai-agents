@@ -1,0 +1,1386 @@
+{
+  "name": "Workflow BurgerMood",
+  "nodes": [
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.payload.from }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1264,
+        336
+      ],
+      "id": "6242fb39-c7ac-4888-bd85-2b331431ac6f",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-flash-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        336
+      ],
+      "id": "e2775f0e-b25d-4117-b0a7-25ba34e448bc",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "eVvzBxHyrGFo4vYp",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c6dc649a-c43d-4f9e-a83f-8732b3e736f6",
+              "name": "mensaje",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        208
+      ],
+      "id": "37d1888a-2846-49b1-90e6-8c3ed19da5f8",
+      "name": "Mapear mensaje"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c6dc649a-c43d-4f9e-a83f-8732b3e736f6",
+              "name": "mensaje",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        32
+      ],
+      "id": "c25a18f4-5ca0-49bc-8da9-1a16961c6241",
+      "name": "Mapear mensaje1"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "inputType": "binary",
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        32
+      ],
+      "id": "32080684-cf8d-4df7-90b9-2c4b89e3aebe",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "eVvzBxHyrGFo4vYp",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.mensaje }}",
+        "options": {
+          "systemMessage": "=Eres el asistente virtual oficial de Burgermood. Tu objetivo es atender a los clientes por WhatsApp, ofrecerles opciones de nuestro menú de forma inteligente y registrar sus pedidos confirmados en el sistema.\n\nTONO Y ESTILO:\nSé amable, directo y rápido. Usa un tono argentino (santafesino) informal pero respetuoso (ej: \"¡Hola! ¿Qué tal?\", \"¡Dale!\", \"Te anoto\"). Tus respuestas deben ser cortas, pensadas para leer rápido en el celular.\n\n---\n\n1. CONSULTA DE MENÚ Y RECOMENDACIONES (Herramienta: menú)\nSi el cliente te pide el menú o pregunta por opciones, ofrecele el link visual:\n\"Si querés ver las fotos de todas las hamburguesas, podés chusmear nuestra carta acá: https://santo-tome-gourmet.ola.click/products?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQMMjU2MjgxMDQwNTU4AAGnGlQ2X13VD7Xtre0YjgSohCazZK6s_6QoNIXjZWK-4isVwhFm43gQO2C-le4_aem_QR1B1F1hFHTM4ysOeNVP8g&utm_id=97760_v0_s00_e0_tv3_a1dennh4tsybqc ¿Qué te gustaría pedir?\"\n- Todas las hamburguesas salen con papas.\n- NO tenemos combos. Nunca menciones la palabra \"combo\".\n- Si el cliente pregunta por ingredientes o precios de una hamburguesa específica, consultá SIEMPRE la herramienta `menú` para responder con datos exactos.\n\n---\n\n2. RECOLECCIÓN DE DATOS DEL PEDIDO (Pasos obligatorios en orden)\nNunca confirmes ni registres un pedido sin tener TODA esta información:\na) Nombre del cliente. Si no se presentó, preguntale: \"¿Me decís tu nombre para el pedido?\"\nb) Detalle exacto de lo que van a comer (hamburguesa y variante: simple/doble/triple).\nc) Dirección de envío. Si no la da, preguntala. Si dice que pasa a buscar, anotá \"Retira por local\".\n  - El costo del envio es de $3000.\nd) Método de pago. Si no lo aclaran, preguntá: \"¿Abonás con transferencia o en efectivo?\"\n  - Si paga con transferencia, el alias es 'burgermood'.\n\n---\n\n3. CÁLCULO Y CONFIRMACIÓN DEL PRECIO (OBLIGATORIO antes de confirmar)\nAntes de informar cualquier precio o total al cliente:\n- OBLIGATORIAMENTE consultá la herramienta `menú` para obtener el precio exacto del o los productos pedidos.\n- Nunca uses un precio que no venga directamente de esa herramienta en esa misma conversación.\n- Si la herramienta no devuelve el producto buscado, avisale al cliente: \"Dame un segundo que lo consulto\" y reintentá la búsqueda con otro término.\n- Solo después de tener el precio confirmado por la herramienta, mostráselo al cliente y pedile confirmación: \"¿Confirmo el pedido?\"\n\n---\n\n4. REGISTRO DEL PEDIDO (Herramienta: extracción_datos / Google Sheets)\nUna vez que el cliente confirma, usá la herramienta `extracción_datos` para registrar la venta. Campos obligatorios:\n- NOMBRE/DIRECCIÓN: Nombre del cliente + su dirección, o \"Nombre - Retira por local\".\n- DESCRIPCIÓN PEDIDO: Descripción exacta de lo pedido (ej: \"1x Simple Griega\").\n- TIPO DE PAGO: Únicamente \"TRANSFERENCIA\" o \"EFECTIVO\" (en mayúsculas).\n- TRANSFERENCIA: Si pagan con transferencia, el monto numérico total. Si es efectivo, dejarlo vacío.\n- EFECTIVO: Si pagan con efectivo, el monto numérico total. Si es transferencia, dejarlo vacío.\n- TOTAL: El monto numérico final del pedido.\n(El número de pedido lo genera la planilla sola, no lo envíes.)\n\nSi la herramienta falla o devuelve un error:\n- NO le digas al cliente que \"hay un problemita técnico\" de forma vaga.\n- Avisale claramente: \"No pude registrar tu pedido automáticamente. Por favor llamá al local para confirmarlo: 33424865076. Tu pedido era: [resumen del pedido].\"\n\n---\n\n5. CIERRE DE CONVERSACIÓN\nSolo después de que la herramienta `extracción_datos` se ejecute con éxito:\n- Avisale al cliente que su pedido ya está en preparación.\n- Recordale el monto total a pagar.\n- Si paga por transferencia, pedile que envíe el comprobante por este mismo chat.\n- Después de confirmar el pedido al cliente, la conversación entra en modo CERRADO. \nEn modo CERRADO solo podés responder mensajes simples. \nNinguna herramienta puede ejecutarse en modo CERRADO.\n\n---\n\n6. CANCELACIONES Y MODIFICACIONES\nNo tenés permisos para borrar ni modificar pedidos ya registrados en la planilla. Si el cliente pide cancelar o cambiar algo de un pedido ya confirmado, respondele: \"Tu pedido ya entró a cocina, para cancelarlo o modificarlo tenés que llamar urgente al local: 3424865076.\"\n\n---\n\nPROHIBIDO (reglas absolutas):\n- Inventar o asumir precios. Todo precio debe venir de la herramienta `menú` en esa misma conversación.\n- Mencionar u ofrecer combos.\n- Confirmar un pedido sin haber obtenido nombre, producto, dirección y método de pago.\n- Registrar un pedido sin haber consultado el precio a la herramienta `menú` primero.\n- Una vez que la herramienta `extracción_datos` se ejecutó con éxito en esta conversación, \n  NUNCA la vuelvas a ejecutar bajo ninguna circunstancia, aunque el cliente mande más mensajes. \n  Si el cliente escribe algo después de confirmado el pedido (ej: \"gracias\", \"ok\", \"perfecto\"), \n  respondé amablemente pero NO uses ninguna herramienta.",
+          "maxIterations": 25
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        1264,
+        112
+      ],
+      "id": "805bd84a-9e43-4dcb-8e8f-f8856a097f7a",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "secretariofacu",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -960,
+        112
+      ],
+      "id": "75756e8c-275b-4119-966d-584ea9f08814",
+      "name": "Webhook",
+      "webhookId": "ab9114fa-edbf-40ba-acc0-5ce108157a39",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://TU_IP_SERVIDOR:3001/api/sendText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "tripleai123"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatId\": \"{{ $('Webhook').item.json.body.payload.from }}\",\n  \"text\": {{ JSON.stringify($json.cleaned) }},\n  \"session\": \"default\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1808,
+        112
+      ],
+      "id": "94849c22-b36d-45c0-a6df-9fbc33f5cb4d",
+      "name": "HTTP Request - Respuesta Whatsapp"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const originalText = $input.first().json.output;\n\n  if (typeof originalText !== 'string') {\n    return {\n      json: {\n        error: 'El campo \"text\" no existe o no es un texto',\n        original: originalText\n      }\n    };\n  }\n\n  let cleaned = originalText\n    .replace(/\\[Used tools:[\\s\\S]*?\\]\\]/g, '')   // Quitar el registro de uso de herramientas\n    .replace(/<[^>]*>/g, '')                     // Quitar HTML\n    .replace(/\\*/g, '')                          // 💥 NUEVO: Fulmina absolutamente todos los asteriscos\n    // 🛑 Eliminé la regla que borraba los saltos de línea (\\r\\n)\n    .replace(/\\t+/g, ' ')                        // Tabs a espacio\n    .replace(/[^\\p{L}\\p{N},.¿?¡!:\\-$\\s\\/\\p{Emoji}]+/gu, '') // Filtro estricto que deja vivir emojis\n    .replace(/ {2,}/g, ' ')                      // Normaliza espacios dobles (reemplaza el \\s+ para no romper los enters)\n    .trim();                                     // Quitar espacios extremos\n\n  return {\n    json: {\n      cleaned\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        112
+      ],
+      "id": "7d5bdbff-6890-46a2-90ed-2c04d4e1912f",
+      "name": "limpiar texto"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d8ad15d1-65fa-4151-9556-2a0e37f792e6",
+              "name": "body.data.message._data.id.remote",
+              "value": "={{ $('Webhook').item.json.body.payload._data.id.id }}",
+              "type": "string"
+            },
+            {
+              "id": "fdb19ad0-b58e-4195-91f3-ce314f5d6a6c",
+              "name": "body",
+              "value": "={{ $('Webhook').item.json.body }}",
+              "type": "object"
+            },
+            {
+              "id": "73b81ee4-2bc3-4880-acae-665dcd9e70a4",
+              "name": "text",
+              "value": "={{ $('Webhook').item.json.body.payload._data.body }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -288,
+        112
+      ],
+      "id": "b2f6ebfb-2693-4ee6-a275-6e8dbc534281",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "25fc766e-e0ed-4faf-98ac-28e21bc68636",
+              "leftValue": "={{ $json.body.payload.fromMe }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "da8c8af1-854f-46e4-a5d2-ba26a5ed4a28",
+              "leftValue": "={{ $json.body.payload._data.type }}",
+              "rightValue": "e2e_notification",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": "",
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -624,
+        112
+      ],
+      "id": "e298fde2-0c7c-4982-afef-32bf9d7b9cc2",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.body.payload.media.url.replace(/localhost:3000|127\\.0\\.0\\.1:3000/g, 'TU_IP_SERVIDOR:3001') }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "tripleai123"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        288,
+        32
+      ],
+      "id": "509b55ed-7b51-4d9b-ac2d-3ab5c63ece87",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.payload._data.type }}",
+                    "rightValue": "=ptt",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "be9dbcd5-0882-4ce9-9822-305865fae492"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6a0ec742-7f93-4ea1-af39-35d410da1c1a",
+                    "leftValue": "={{ $json.body.payload._data.type }}",
+                    "rightValue": "chat",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Texto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ab833192-68b1-4efe-9744-1bb03cd22356",
+                    "leftValue": "={{ $json.body.payload._data.type }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Imagen"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6ffc6d84-a41c-4b98-9b98-c4b59dcbe79d",
+                    "leftValue": "={{ $json.body.payload._data.type }}",
+                    "rightValue": "document",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Documento"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -96,
+        96
+      ],
+      "id": "ad70c191-6ce9-4540-bb5d-106192b2d214",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.body.payload.media.url.replace('localhost:3000', 'TU_IP_SERVIDOR:3001') }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "tripleai123"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        288,
+        384
+      ],
+      "id": "709b204b-fec6-4487-afee-9702998cfac4",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "text": "=Sos un asistente financiero experto. Analizá la imagen de este comprobante de transferencia y extraé los siguientes datos exactos: 'Monto' (solo números), 'Fecha' (formato DD/MM/AAAA), 'Nombre del Emisor', y 'Numero de Operacion'. Devolvé ÚNICAMENTE un objeto JSON válido con estas claves, sin comillas invertidas ni texto adicional.",
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        384
+      ],
+      "id": "65dae2b7-1eb9-486b-ac38-beb98d9160ef",
+      "name": "Analyze an image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "eVvzBxHyrGFo4vYp",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.body.payload.media.url.replace('localhost:3000', 'TU_IP_SERVIDOR:3001') }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "tripleai123"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        288,
+        560
+      ],
+      "id": "6a74689d-68e1-4d8e-9ffe-d40ea54c417d",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "text": "Sos un asistente financiero experto. Analizá la imagen de este comprobante de transferencia y extraé los siguientes datos exactos: 'Monto' (solo números), 'Fecha' (formato DD/MM/AAAA), 'Nombre del Emisor', y 'Numero de Operacion'. Devolvé ÚNICAMENTE un objeto JSON válido con estas claves, sin comillas invertidas ni texto adicional.",
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        560
+      ],
+      "id": "1522aa0d-94f5-4f4a-8f12-05c41da0fe81",
+      "name": "Analyze document",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "eVvzBxHyrGFo4vYp",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c6dc649a-c43d-4f9e-a83f-8732b3e736f6",
+              "name": "mensaje",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        384
+      ],
+      "id": "4594b345-facd-4be6-80d3-4c439c58415f",
+      "name": "Mapear mensaje3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c6dc649a-c43d-4f9e-a83f-8732b3e736f6",
+              "name": "mensaje",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        560
+      ],
+      "id": "5e9af33a-ba7c-4c8a-a11b-0e0dc2afbf49",
+      "name": "Mapear mensaje2"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -592,
+        848
+      ],
+      "id": "8da29d32-b8e8-435e-b026-2979aadd7822",
+      "name": "Schedule Trigger",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  // Generamos la fecha actual forzando la zona horaria de Argentina\n  let fechaArgentina = new Date().toLocaleString(\"en-GB\", { \n    timeZone: \"America/Argentina/Buenos_Aires\" \n  });\n\n  // El formato en-GB ya nos devuelve DD/MM/YYYY, solo cortamos la parte de la hora\n  let fechaCorta = fechaArgentina.split(',')[0];\n\n  // Guardamos la fecha impecable\n  item.json.FechaLimpia = fechaCorta;\n\n  return item;\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        848
+      ],
+      "id": "d1ab450d-0c6f-41e2-895b-a5599b87b5e1",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  // Generamos la fecha actual forzando la zona horaria de Argentina\n  let fechaArgentina = new Date().toLocaleString(\"en-GB\", { \n    timeZone: \"America/Argentina/Buenos_Aires\" \n  });\n\n  // El formato en-GB ya nos devuelve DD/MM/YYYY, solo cortamos la parte de la hora\n  let fechaCorta = fechaArgentina.split(',')[0];\n\n  // Guardamos la fecha impecable\n  item.json.FechaLimpia = fechaCorta;\n\n  return item;\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -768,
+        112
+      ],
+      "id": "91a75d5d-acae-4f29-9edb-89d72e46a296",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/TU_GOOGLE_SHEET_ID_1:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requests\": [\n    {\n      \"duplicateSheet\": {\n        \"sourceSheetId\": 822535413,\n        \"insertSheetIndex\": 0,\n        \"newSheetName\": \"{{ $now.setZone('America/Argentina/Buenos_Aires').toFormat('dd/MM/yyyy') }}\"\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -192,
+        848
+      ],
+      "id": "01ccbb07-383a-43e2-a67f-e0ba1c15fb9e",
+      "name": "HTTP Request4",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "y2UN5nie1iKD15w3",
+          "name": "Google Sheets API 05/03"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "=Pedir CONFIRMACION DEL PEDIDO 1 SOLA VEZ, una vex confirmado el pedido:\nÚsala ÚNICAMENTE cuando el cliente haya confirmado explícitamente su pedido y vos ya tengas estos 4 datos completos:\n1. Nombre del cliente.\n2. Producto exacto pedido (ej: \"1x Simple Griega\").\n3. Dirección de envío o confirmación de retiro por local.\n4. Método de pago (TRANSFERENCIA o EFECTIVO).\n\nNo la uses antes de tener los 4 datos. No la uses para consultas ni preguntas. No la uses mas de 1 vez para un mismo pedido. Solo para registrar pedidos confirmados.\n\nSi el cliente agradece o confirma el recibo de informacion: \"Gracias\", \"Ok\", \"Joya\", etc. Despues de confirmar el pedido y cargar los datos, no usar esta herramienta devuelta para no anotar dos veces el pedido.",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "TU_GOOGLE_SHEET_ID_1",
+          "mode": "list",
+          "cachedResultName": "Plantilla Pedidos Burgermood",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/TU_GOOGLE_SHEET_ID_1/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $now.setZone('America/Argentina/Buenos_Aires').toFormat('dd/MM/yyyy') }}"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "NOMBRE/DIRECCIÓN": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('NOMBRE_DIRECCI_N', ``, 'string') }}",
+            "TIPO DE PAGO": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('TIPO_DE_PAGO', ``, 'string') }}",
+            "TRANSFERENCIA": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('TRANSFERENCIA', ``, 'string') }}",
+            "EFECTIVO": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('EFECTIVO', ``, 'string') }}",
+            "CAMBIO": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('CAMBIO', ``, 'string') }}",
+            "TOTAL": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('TOTAL', ``, 'string') }}",
+            "SERVICIO DE ENVIO": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('SERVICIO_DE_ENVIO', `Poner SI o NO`, 'string') }}",
+            "DESCRIPCIÓN PEDIDO": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('DESCRIPCI_N_PEDIDO', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "PEDIDO Nº",
+              "displayName": "PEDIDO Nº",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "NOMBRE/DIRECCIÓN",
+              "displayName": "NOMBRE/DIRECCIÓN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "TIPO DE PAGO",
+              "displayName": "TIPO DE PAGO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "TRANSFERENCIA",
+              "displayName": "TRANSFERENCIA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "EFECTIVO",
+              "displayName": "EFECTIVO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "SERVICIO DE ENVIO",
+              "displayName": "SERVICIO DE ENVIO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "CAMBIO",
+              "displayName": "CAMBIO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "TOTAL",
+              "displayName": "TOTAL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "DESCRIPCIÓN PEDIDO",
+              "displayName": "DESCRIPCIÓN PEDIDO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        1600,
+        320
+      ],
+      "id": "3795f60e-ff15-452c-8692-fd6c6b2e62f1",
+      "name": "extracción_datos",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "y2UN5nie1iKD15w3",
+          "name": "Google Sheets API 05/03"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "=Úsala SIEMPRE en estos casos:\n1. El cliente pregunta por ingredientes, opciones o variantes de cualquier hamburguesa.\n2. El cliente pregunta el precio de cualquier producto.\n3. Vas a informarle un precio o total al cliente antes de confirmar el pedido.\n\nEsta herramienta lee la base de datos oficial de Burgermood. REGLA ABSOLUTA: Nunca informes un precio que no hayas obtenido de esta herramienta en esta misma conversación. Si el producto no aparece en los resultados, no existe en el menú.",
+        "documentId": {
+          "__rl": true,
+          "value": "TU_GOOGLE_SHEET_ID_2",
+          "mode": "list",
+          "cachedResultName": "Menú BurgerMood",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/TU_GOOGLE_SHEET_ID_2/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/TU_GOOGLE_SHEET_ID_2/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        1424,
+        320
+      ],
+      "id": "adf1d223-989c-43b3-9837-405871a5462a",
+      "name": "menú",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "y2UN5nie1iKD15w3",
+          "name": "Google Sheets API 05/03"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "removeItemsSeenInPreviousExecutions",
+        "dedupeValue": "={{ $json.body.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        112
+      ],
+      "id": "51fc9985-b225-41b0-ada9-ecf9a094caf7",
+      "name": "Remove Duplicates"
+    }
+  ],
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2026-04-19T00:00:10.108-03:00",
+          "Readable date": "April 19th 2026, 12:00:10 am",
+          "Readable time": "12:00:10 am",
+          "Day of week": "Sunday",
+          "Year": "2026",
+          "Month": "April",
+          "Day of month": "19",
+          "Hour": "00",
+          "Minute": "00",
+          "Second": "10",
+          "Timezone": "America/Argentina/Buenos_Aires (UTC-03:00)"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "TU_DOMINIO_N8N",
+            "user-agent": "WAHA/2026.3.2",
+            "content-length": "3351",
+            "accept": "application/json, text/plain, */*",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1",
+            "cf-connecting-ip": "TU_IP_SERVIDOR",
+            "cf-ipcountry": "BR",
+            "cf-ray": "9eef7ef59dd8bc35-GRU",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "content-type": "application/json",
+            "x-forwarded-for": "172.71.238.30",
+            "x-forwarded-host": "TU_DOMINIO_N8N",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "83e9b9347fb4",
+            "x-real-ip": "172.71.238.30",
+            "x-webhook-request-id": "1cxq4n1bmo6d6ef1",
+            "x-webhook-timestamp": "1776639316861"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "id": "evt_01kpkz94vx8ycwr9gw8sp2vhew",
+            "timestamp": 1776639316861,
+            "event": "message",
+            "session": "default",
+            "metadata": {},
+            "me": {
+              "id": "TU_NUMERO_WHATSAPP@c.us",
+              "pushName": "ttripleai"
+            },
+            "payload": {
+              "id": "false_204122716381218@lid_3AE13F54468CB37265FD",
+              "timestamp": 1776639316,
+              "from": "204122716381218@lid",
+              "fromMe": false,
+              "source": "app",
+              "to": "TU_NUMERO_WHATSAPP@c.us",
+              "body": "Hola",
+              "hasMedia": false,
+              "media": null,
+              "ack": 1,
+              "ackName": "SERVER",
+              "location": null,
+              "vCards": [],
+              "_data": {
+                "id": {
+                  "fromMe": false,
+                  "remote": "204122716381218@lid",
+                  "id": "3AE13F54468CB37265FD",
+                  "_serialized": "false_204122716381218@lid_3AE13F54468CB37265FD"
+                },
+                "viewed": false,
+                "body": "Hola",
+                "type": "chat",
+                "t": 1776639316,
+                "clientReceivedTsMillis": 1776639315812,
+                "notifyName": "Facu",
+                "from": "204122716381218@lid",
+                "to": "TU_NUMERO_WHATSAPP@c.us",
+                "ack": 1,
+                "invis": false,
+                "isNewMsg": true,
+                "star": false,
+                "kicNotified": false,
+                "recvFresh": true,
+                "isFromTemplate": false,
+                "isAdsMedia": false,
+                "pollInvalidated": false,
+                "isSentCagPollCreation": false,
+                "latestEditMsgKey": null,
+                "latestEditSenderTimestampMs": null,
+                "mentionedJidList": [],
+                "groupMentions": [],
+                "isEventCanceled": false,
+                "eventInvalidated": false,
+                "isVcardOverMmsDocument": false,
+                "isForwarded": false,
+                "isQuestion": false,
+                "questionReplyQuotedMessage": null,
+                "questionResponsesCount": 0,
+                "readQuestionResponsesCount": 0,
+                "forwardsCount": 0,
+                "hasReaction": false,
+                "newsletterAdminProfile": null,
+                "viewMode": "VISIBLE",
+                "messageSecret": {
+                  "0": 17,
+                  "1": 246,
+                  "2": 181,
+                  "3": 138,
+                  "4": 109,
+                  "5": 220,
+                  "6": 198,
+                  "7": 198,
+                  "8": 242,
+                  "9": 91,
+                  "10": 48,
+                  "11": 211,
+                  "12": 134,
+                  "13": 52,
+                  "14": 150,
+                  "15": 130,
+                  "16": 84,
+                  "17": 0,
+                  "18": 193,
+                  "19": 174,
+                  "20": 183,
+                  "21": 114,
+                  "22": 254,
+                  "23": 97,
+                  "24": 197,
+                  "25": 70,
+                  "26": 246,
+                  "27": 190,
+                  "28": 193,
+                  "29": 106,
+                  "30": 243,
+                  "31": 233
+                },
+                "productHeaderImageRejected": false,
+                "lastPlaybackProgress": 0,
+                "isDynamicReplyButtonsMsg": false,
+                "isCarouselCard": false,
+                "parentMsgId": null,
+                "callSilenceReason": null,
+                "isVideoCall": false,
+                "callDuration": null,
+                "callCreator": null,
+                "callParticipants": null,
+                "isCallLink": null,
+                "callLinkToken": null,
+                "terminatedByDeviceSwitch": null,
+                "selfOtherDeviceConnected": null,
+                "isMdHistoryMsg": false,
+                "stickerSentTs": 0,
+                "isAvatar": false,
+                "lastUpdateFromServerTs": 0,
+                "invokedBotWid": null,
+                "bizBotType": null,
+                "botResponseTargetId": null,
+                "botPluginType": null,
+                "botPluginReferenceIndex": null,
+                "botPluginSearchProvider": null,
+                "botPluginSearchUrl": null,
+                "botPluginSearchQuery": null,
+                "botPluginMaybeParent": false,
+                "botReelPluginThumbnailCdnUrl": null,
+                "botMessageDisclaimerText": null,
+                "botSessionTransparencyType": null,
+                "botMsgBodyType": null,
+                "botModeSelection": null,
+                "botModeOverride": null,
+                "reportingTokenInfo": {
+                  "stanzaTs": 1776639316,
+                  "reportingToken": {
+                    "0": 141,
+                    "1": 42,
+                    "2": 135,
+                    "3": 15,
+                    "4": 173,
+                    "5": 114,
+                    "6": 115,
+                    "7": 193,
+                    "8": 206,
+                    "9": 121,
+                    "10": 32,
+                    "11": 219,
+                    "12": 76,
+                    "13": 73,
+                    "14": 161,
+                    "15": 252
+                  },
+                  "version": 2,
+                  "reportingTag": {
+                    "0": 1,
+                    "1": 18,
+                    "2": 171,
+                    "3": 135,
+                    "4": 244,
+                    "5": 147,
+                    "6": 126,
+                    "7": 128,
+                    "8": 184,
+                    "9": 72,
+                    "10": 123,
+                    "11": 57,
+                    "12": 172,
+                    "13": 60,
+                    "14": 48,
+                    "15": 56,
+                    "16": 70,
+                    "17": 190,
+                    "18": 174,
+                    "19": 172
+                  }
+                },
+                "requiresDirectConnection": null,
+                "bizContentPlaceholderType": null,
+                "hostedBizEncStateMismatch": false,
+                "senderOrRecipientAccountTypeHosted": false,
+                "placeholderCreatedWhenAccountIsHosted": false,
+                "groupHistoryBundleMessageKey": null,
+                "groupHistoryBundleMetadata": null,
+                "groupHistoryIndividualMessageInfo": null,
+                "nonJidMentions": null,
+                "links": []
+              }
+            },
+            "engine": "WEBJS",
+            "environment": {
+              "version": "2026.3.2",
+              "engine": "WEBJS",
+              "tier": "CORE",
+              "browser": "/usr/bin/chromium",
+              "platform": "linux/x64",
+              "worker": {
+                "id": null
+              }
+            }
+          },
+          "webhookUrl": "https://TU_DOMINIO_N8N/webhook/secretariofacu",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapear mensaje": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapear mensaje1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Mapear mensaje1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "limpiar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "limpiar texto": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Respuesta Whatsapp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mapear mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Analyze an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze an image": {
+      "main": [
+        [
+          {
+            "node": "Mapear mensaje3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Analyze document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze document": {
+      "main": [
+        [
+          {
+            "node": "Mapear mensaje2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapear mensaje3": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapear mensaje2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extracción_datos": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "menú": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "America/Argentina/Buenos_Aires",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "JrzMIhFTLiKQ5yHh"
+  },
+  "versionId": "5500d333-0dd5-416e-abc3-f5f2af7113e0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f8ecc2f2bd0b7e4b4a50182cf2c27e46097d883637c3f20ebe0e66c77fe23541"
+  },
+  "id": "7UQF7UOfYK7gd5Ds",
+  "tags": []
+}
