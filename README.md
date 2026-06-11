@@ -1,47 +1,49 @@
 # ttripleai-ai-agents
+
 Autonomous B2B workflows and AI agents built with n8n, LangChain, and OCR. Official repository of @ttripleai.
 
-# @ttripleai - Autonomous Business Ecosystems 🚀
+## @ttripleai - Autonomous Business Ecosystems 🚀
 
-Bienvenido al repositorio oficial de **@ttripleai**. En este espacio presento la arquitectura de mis ecosistemas de automatización B2B, diseñados para transformar procesos manuales en flujos autónomos de alto rendimiento.
+Welcome to the official **@ttripleai** repository. In this space, I present the architecture of my B2B automation ecosystems, designed to transform manual processes into high-performance autonomous workflows.
 
-Como estudiante de Ingeniería en Inteligencia Artificial (UNL, Argentina), mi enfoque se centra en la creación de lógica algorítmica personalizada, integrando agentes de IA con memoria, visión artificial (OCR) y sincronización de datos en tiempo real.
-
-## 📂 Proyectos Destacados
-
-### 1. 🏥 KineCust - Gestión Inteligente para Centros de Salud
-*(Archivo: `Workflow_Kine_BETA.json`)*
-Un sistema avanzado de recepción y triaje para consultorios médicos.
-- **Triaje Semántico:** El agente analiza el síntoma del paciente y asigna automáticamente el recurso necesario (Magneto/Gimnasio).
-- **Gestión de Restricciones:** Controla la capacidad máxima por horario leyendo directamente de Google Calendar.
-- **Vínculo con Obras Sociales:** Consulta requisitos y copagos en bases de datos externas antes de confirmar turnos.
-- **OCR de Órdenes:** Procesa imágenes de pedidos médicos para extraer diagnósticos y sesiones de forma autónoma.
-
-### 2. 💰 @ttripleai Finanzas - Verificación de Pagos 24/7
-*(Archivo: `Workflow_Inmobiliaria_BETA.json`)*
-Ecosistema diseñado para la conciliación bancaria y administrativa automatizada.
-- **Auditoría Omnicanal:** Monitorea entradas en Gmail y WhatsApp simultáneamente.
-- **Visión Artificial (OCR):** Analiza comprobantes (PDF/JPG) para extraer montos, fechas y números de operación con alta precisión.
-- **Conciliación Automática:** Cruza los datos con planillas de Google Sheets para validar transacciones y actualizar estados de deuda.
-
-### 3. 🍔 BurgerMood - Agente de Ventas Transaccional
-*(Archivo: `Workflow_BurgerMood.json`)*
-Flujo de e-commerce gastronómico con validación estricta de datos.
-- **Base de Conocimiento:** El agente consulta precios y stock en tiempo real desde Google Sheets para evitar alucinaciones.
-- **Captura de Leads:** Recopila datos de envío, preferencias y métodos de pago, enviando el pedido listo para cocina al sistema de gestión.
-
-### 4. 🧠 Secretario Ejecutivo Personal
-*(Archivo: `SecretarioFacu.json`)*
-Asistente privado de alta disponibilidad para la gestión de productividad.
-- **Interfaz Híbrida:** Capacidad de transcribir y ejecutar comandos desde audios de WhatsApp o texto.
-- **Gestión de Calendario y Mail:** Creación y modificación de eventos complejos y lectura de correos clave.
-- **Memoria de Largo Plazo:** Implementación de nodos de memoria para mantener el contexto de tareas pendientes.
-
-## 🛠️ Stack Tecnológico
-- **Orquestación:** n8n (Arquitectura Self-Hosted en VPS con Docker).
-- **Inteligencia Artificial:** Google Gemini 2.5 Flash / OpenAI, LangChain Agents.
-- **Integraciones:** WhatsApp Business API, Gmail API, Google Calendar API, Google Sheets API.
-- **Lógica Custom:** Implementación de nodos de código en JavaScript y expresiones regulares (Regex) para limpieza de datos.
+As an Artificial Intelligence Engineering student (UNL, Argentina), my focus is on creating custom algorithmic logic, integrating AI agents with memory, computer vision (OCR), and real-time data synchronization.
 
 ---
-© 2026 **@ttripleai** - Innovative Engineering Solutions
+
+## 📂 Featured Projects
+
+### 1. 🏥 KineCust - Smart Management for Healthcare Centers
+*(File: `Workflow_Kine_BETA.json`)* An advanced reception and triage system for medical clinics.
+* **Semantic Triage:** The agent analyzes the patient's symptoms and automatically assigns the necessary resource (Magnetotherapy/Gym).
+* **Constraint Management:** Controls maximum capacity per time slot by reading directly from Google Calendar.
+* **Health Insurance Integration:** Checks requirements and co-pays in external databases before confirming appointments.
+* **Medical Order OCR:** Processes images of medical prescriptions to autonomously extract diagnoses and session counts.
+
+### 2. 💰 @ttripleai Finance - 24/7 Payment Verification
+*(File: `Workflow_Inmobiliaria_BETA.json`)* An ecosystem designed for automated banking and administrative reconciliation.
+* **Omnichannel Auditing:** Monitors inputs across Gmail and WhatsApp simultaneously.
+* **Computer Vision (OCR):** Analyzes payment receipts (PDF/JPG) to extract amounts, dates, and transaction numbers with high precision.
+* **Automated Reconciliation:** Cross-references data with Google Sheets to validate transactions and update debt statuses.
+
+### 3. 🍔 BurgerMood - Transactional Sales Agent
+*(File: `Workflow_BurgerMood.json`)* Gastronomic e-commerce workflow with strict data validation.
+* **Knowledge Base:** The agent queries prices and stock in real-time from Google Sheets to prevent hallucinations.
+* **Lead Capture:** Collects shipping data, preferences, and payment methods, sending the ready-to-cook order directly to the management system.
+
+### 4. 🧠 Personal Executive Secretary
+*(File: `SecretarioFacu.json`)* High-availability private assistant for productivity management.
+* **Hybrid Interface:** Capable of transcribing and executing commands from WhatsApp voice notes or text.
+* **Calendar and Email Management:** Creation and modification of complex events and reading of key emails.
+* **Long-Term Memory:** Implementation of memory nodes to maintain the context of pending tasks.
+
+---
+
+## 🛠️ Tech Stack
+
+* **Orchestration:** n8n (Self-Hosted Architecture on a VPS with Docker).
+* **Artificial Intelligence:** Google Gemini 2.5 Flash / OpenAI, LangChain Agents.
+* **Integrations:** WhatsApp Business API, Gmail API, Google Calendar API, Google Sheets API.
+* **Custom Logic:** Implementation of JavaScript code nodes and regular expressions (Regex) for data cleaning.
+
+---
+*© 2026 @ttripleai - Innovative Engineering Solutions*
